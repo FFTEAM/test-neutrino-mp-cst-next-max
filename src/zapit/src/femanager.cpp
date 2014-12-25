@@ -2,7 +2,7 @@
 	Neutrino-GUI  -   DBoxII-Project
 
 	Copyright (C) 2011 CoolStream International Ltd
-	Copyright (C) 2012 Stefan Seyfried
+	Copyright (C) 2012,2013,2014 Stefan Seyfried
 
 	License: GPLv2
 
@@ -464,6 +464,9 @@ void CFEManager::linkFrontends(bool init)
 			if ((fe->fenumber + 1) < (int) MAX_DMX_UNITS)
 				demuxes[fe->fenumber + 1] = 1;
 		}
+		else {	/* unused -> no need to keep open */
+			fe->Close();
+		}
 	}
 	for(unsigned i = 0; i < MAX_DMX_UNITS; i++) {
 		if (demuxes[i] == 0) {
@@ -478,7 +481,7 @@ void CFEManager::Open()
 {
 	for(fe_map_iterator_t it = femap.begin(); it != femap.end(); it++) {
 		CFrontend * fe = it->second;
-		if(!fe->Locked())
+		if (!fe->Locked() && fe->getMode() != CFrontend::FE_MODE_UNUSED)
 			fe->Open(true);
 	}
 }
