@@ -31,14 +31,13 @@
 
 #include <neutrinoMessages.h>
 #include <gui/movieinfo.h>
+#include <driver/display.h>
 
 #if HAVE_COOL_HARDWARE
 #include <record_cs.h>
-#include <driver/vfd.h>
 #endif
-#if HAVE_TRIPLEDRAGON || USE_STB_HAL
-#include <record_td.h>
-#include <driver/display.h>
+#if USE_STB_HAL
+#include <record_hal.h>
 #endif
 
 #include <OpenThreads/Mutex>
