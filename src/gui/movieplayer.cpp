@@ -987,10 +987,7 @@ void CMoviePlayerGui::PlayFileLoop(void)
 {
 	bool first_start = true;
 	bool update_lcd = true;
-	int ss,mm,hh;
-#if HAVE_COOL_HARDWARE
 	int eof = 0;
-#endif
 	bool at_eof = !(playstate >= CMoviePlayerGui::PLAY);;
 	while (playstate >= CMoviePlayerGui::PLAY)
 	{
@@ -1026,15 +1023,6 @@ void CMoviePlayerGui::PlayFileLoop(void)
 #else
 				CVFD::getInstance()->showPercentOver(file_prozent);
 #endif
-#if HAVE_DUCKBOX_HARDWARE
-				ss = position/1000;
-				hh = ss/3600;
-				ss -= hh * 3600;
-				mm = ss/60;
-				ss -= mm * 60;
-				std::string Value = to_string(hh/10) + to_string(hh%10) + ":" + to_string(mm/10) + to_string(mm%10) + ":" + to_string(ss/10) + to_string(ss%10);
-				CVFD::getInstance()->ShowText(Value.c_str());
-#endif
 
 				playback->GetSpeed(speed);
 				/* at BOF lib set speed 1, check it */
@@ -1045,9 +1033,6 @@ void CMoviePlayerGui::PlayFileLoop(void)
 #ifdef DEBUG
 				printf("CMoviePlayerGui::PlayFile: speed %d position %d duration %d (%d, %d%%)\n", speed, position, duration, duration-position, file_prozent);
 #endif
-			} else
-#if HAVE_COOL_HARDWARE
-			{
 				/* in case ffmpeg report incorrect values */
 				int posdiff = duration - position;
 				if ((posdiff >= 0) && (posdiff < 2000) && timeshift == TSHIFT_MODE_OFF)
@@ -1061,14 +1046,6 @@ void CMoviePlayerGui::PlayFileLoop(void)
 				else
 					eof = 0;
 			}
-#else
-			{
-				if (filelist_it == filelist.end() - 1 || filelist_it == filelist.end())
-					g_RCInput->postMsg((neutrino_msg_t) g_settings.mpkey_stop, 0);
-				else
-					g_RCInput->postMsg((neutrino_msg_t) CRCInput::RC_right, 0);
-			}
-#endif
 			handleMovieBrowser(0, position);
 			FileTime.update(position, duration);
 		}
@@ -1081,24 +1058,6 @@ void CMoviePlayerGui::PlayFileLoop(void)
 		} else if (msg == (neutrino_msg_t) g_settings.mpkey_stop) {
 			playstate = CMoviePlayerGui::STOPPED;
 			ClearQueue();
-		} else if ((!filelist.empty() && msg == (neutrino_msg_t) CRCInput::RC_ok)) {
-			EnableClockAndMute(false);
-			CFileBrowser playlist;
-			CFile *pfile = NULL;
-			pfile = &(*filelist_it);
-			if (playlist.playlist_manager(filelist, std::distance( filelist.begin(), filelist_it )))
-			{
-				playstate = CMoviePlayerGui::STOPPED;
-				CFile *sfile = NULL;
-				for (filelist_it = filelist.begin(); filelist_it != filelist.end(); ++filelist_it)
-				{
-					pfile = &(*filelist_it);
-					sfile = playlist.getSelectedFile();
-					if ( (sfile->getFileName() == pfile->getFileName()) && (sfile->getPath() == pfile->getPath()))
-						break;
-				}
-			}
-			EnableClockAndMute(true);
 		} else if ((!filelist.empty() && msg == (neutrino_msg_t) CRCInput::RC_right)) {
 			if (filelist_it < (filelist.end() - 1)) {
 				++filelist_it;
@@ -1151,6 +1110,24 @@ void CMoviePlayerGui::PlayFileLoop(void)
 				updateLcd();
 				if (timeshift == TSHIFT_MODE_OFF)
 					callInfoViewer();
+			} else if ((!filelist.empty() && msg == (neutrino_msg_t) CRCInput::RC_ok)) {
+				EnableClockAndMute(false);
+				CFileBrowser playlist;
+				CFile *pfile = NULL;
+				pfile = &(*filelist_it);
+				if (playlist.playlist_manager(filelist, std::distance( filelist.begin(), filelist_it )))
+				{
+					playstate = CMoviePlayerGui::STOPPED;
+					CFile *sfile = NULL;
+					for (filelist_it = filelist.begin(); filelist_it != filelist.end(); ++filelist_it)
+					{
+						pfile = &(*filelist_it);
+						sfile = playlist.getSelectedFile();
+						if ( (sfile->getFileName() == pfile->getFileName()) && (sfile->getPath() == pfile->getPath()))
+							break;
+					}
+				}
+				EnableClockAndMute(true);
 			}
 		} else if (msg == (neutrino_msg_t) g_settings.mpkey_pause) {
 			if (playstate == CMoviePlayerGui::PAUSE) {
@@ -1260,10 +1237,10 @@ void CMoviePlayerGui::PlayFileLoop(void)
 		} else if (msg == (neutrino_msg_t) g_settings.mpkey_goto) {
 			bool cancel = true;
 			playback->GetPosition(position, duration);
-			ss = position/1000;
-			hh = ss/3600;
+			int ss = position/1000;
+			int hh = ss/3600;
 			ss -= hh * 3600;
-			mm = ss/60;
+			int mm = ss/60;
 			ss -= mm * 60;
 			std::string Value = to_string(hh/10) + to_string(hh%10) + ":" + to_string(mm/10) + to_string(mm%10) + ":" + to_string(ss/10) + to_string(ss%10);
 			CTimeInput jumpTime (LOCALE_MPKEY_GOTO, &Value, NONEXISTANT_LOCALE, NONEXISTANT_LOCALE, NULL, &cancel);
