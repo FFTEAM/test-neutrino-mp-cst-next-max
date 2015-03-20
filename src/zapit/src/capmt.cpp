@@ -142,11 +142,9 @@ bool CCam::setCaPmt(bool update)
 	return sendMessage((char *)cabuf, calen, update);
 }
 
-//bool CCam::sendCaPmt(uint64_t tpid, uint8_t *rawpmt, int rawlen)
 bool CCam::sendCaPmt(uint64_t tpid, uint8_t *rawpmt, int rawlen, unsigned char scrambled, casys_map_t camap, int mode, bool enable)
 {
 	return cCA::GetInstance()->SendCAPMT(tpid, source_demux, camask,
-//			rawpmt ? cabuf : NULL, rawpmt ? calen : 0, rawpmt, rawpmt ? rawlen : 0);
 			rawpmt ? cabuf : NULL, rawpmt ? calen : 0, rawpmt, rawpmt ? rawlen : 0, scrambled, camap, mode, enable);
 }
 
@@ -274,7 +272,6 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 	if (mode == RECORD && start == false && source != cDemux::GetSource(0)) {
 		INFO("MODE!=record(%d) start=false, src %d getsrc %d", mode, source, cDemux::GetSource(0));
 		cam->sendMessage(NULL, 0, false);
-//		cam->sendCaPmt(channel->getChannelID(), NULL, 0);
 		cam->sendCaPmt(channel->getChannelID(), NULL, 0, channel->scrambled, channel->camap, mode, start);
 	}
 
@@ -341,7 +338,6 @@ bool CCamManager::SetMode(t_channel_id channel_id, enum runmode mode, bool start
 			cam->makeCaPmt(channel, false, list, caids);
 			int len;
 			unsigned char * buffer = channel->getRawPmt(len);
-//			cam->sendCaPmt(channel->getChannelID(), buffer, len);
 			cam->sendCaPmt(channel->getChannelID(), buffer, len, channel->scrambled, channel->camap, 0, true);
 			//list = CCam::CAPMT_MORE;
 		}
