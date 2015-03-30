@@ -1157,7 +1157,7 @@ void CAudioPlayerGui::scanXmlData(xmlDocPtr answer_parser, const char *nametag, 
 				listPos++;
 				// show status
 				int global = 100*listPos / maxProgress;
-				progress.showGlobalStatus(global);
+				progress.showStatus(global);
 #ifdef LCD_UPDATE
 				CVFD::getInstance()->showProgressBar(global, "read xmldata...");
 				CVFD::getInstance()->setMode(CVFD::MODE_PROGRESSBAR);
@@ -1253,7 +1253,7 @@ bool CAudioPlayerGui::openFilebrowser(void)
 				currentProgress++;
 				// show status
 				int global = 100*currentProgress/maxProgress;
-				progress.showGlobalStatus(global);
+				progress.showStatus(global);
 				progress.showStatusMessageUTF(files->Name);
 #ifdef LCD_UPDATE
 				CVFD::getInstance()->showProgressBar(global, "read metadata...");
@@ -1447,7 +1447,7 @@ bool CAudioPlayerGui::openSCbrowser(void)
 				currentProgress++;
 				// show progress
 				int global = 100*currentProgress/maxProgress;
-				progress.showGlobalStatus(global);
+				progress.showStatus(global);
 				progress.showStatusMessageUTF(files->Name);
 #ifdef LCD_UPDATE
 				CVFD::getInstance()->showProgressBar(global, "read metadata...");
@@ -1846,10 +1846,6 @@ void CAudioPlayerGui::paintItemID3DetailsLine (int pos)
 	if (dline != NULL)
 		dline->kill();
 
-	// clear infobox
-	if (ibox != NULL)
-		ibox->kill();
-
 	// paint Line if detail info (and not valid list pos) and info box
 	if (!m_playlist.empty() && (pos >= 0))
 	{
@@ -1860,39 +1856,41 @@ void CAudioPlayerGui::paintItemID3DetailsLine (int pos)
 		dline->paint(false);
 
 		// paint id3 infobox
-		if (ibox == NULL)
+		if (ibox == NULL){
 			ibox = new CComponentsInfoBox(m_x, ypos2, m_width, m_info_height);
-		ibox->setCorner(RADIUS_LARGE);
-		ibox->setYPos(ypos2);
-		ibox->setColorBody(COL_MENUCONTENTDARK_PLUS_0);
-		ibox->setFrameThickness(2);
-		ibox->paint(false);
+			ibox->setFrameThickness(2);
+			ibox->setCorner(RADIUS_LARGE);
+			ibox->setYPos(ypos2);
+			ibox->setColorBody(COL_MENUCONTENTDARK_PLUS_0);
+			ibox->forceTextPaint(false);
+		}
 
-		g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->RenderString(m_x + 10, ypos2 + 2 + 1*m_fheight, m_width- 80,
-				m_playlist[m_selected].MetaData.title, COL_MENUCONTENTDARK_TEXT);
-		std::string tmp;
+		//title
+		std::string text_info = m_playlist[m_selected].MetaData.title;
+
+		//date, genre
 		if (m_playlist[m_selected].MetaData.genre.empty())
-			tmp = m_playlist[m_selected].MetaData.date;
+			text_info = m_playlist[m_selected].MetaData.date;
 		else if (m_playlist[m_selected].MetaData.date.empty())
-			tmp = m_playlist[m_selected].MetaData.genre;
+			text_info = m_playlist[m_selected].MetaData.genre;
 		else
 		{
-			tmp = m_playlist[m_selected].MetaData.genre;
-			tmp += " / ";
-			tmp += m_playlist[m_selected].MetaData.date;
+			text_info = m_playlist[m_selected].MetaData.genre;
+			text_info += " / ";
+			text_info += m_playlist[m_selected].MetaData.date;
 		}
-		int w = g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->getRenderWidth(tmp) + 10;
-		g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->RenderString(m_x + m_width - w - 5, ypos2 + 2 + 1*m_fheight,
-				w, tmp, COL_MENUCONTENTDARK_TEXT);
-		tmp = m_playlist[m_selected].MetaData.artist;
+
+		//artist, album
+		text_info = m_playlist[m_selected].MetaData.artist;
 		if (!(m_playlist[m_selected].MetaData.album.empty()))
 		{
-			tmp += " (";
-			tmp += m_playlist[m_selected].MetaData.album;
-			tmp += ')';
+			text_info += " (";
+			text_info += m_playlist[m_selected].MetaData.album;
+			text_info += ')';
 		}
-		g_Font[SNeutrinoSettings::FONT_TYPE_MENU]->RenderString(m_x + 10, ypos2 + 2*m_fheight - 2, m_width - 20,
-				tmp, COL_MENUCONTENTDARK_TEXT);
+
+		ibox->setText(text_info, CTextBox::AUTO_WIDTH, g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_INFO], COL_MENUCONTENT_TEXT);
+		ibox->paint(false);
 	}
 	else
 	{
@@ -2192,7 +2190,7 @@ void CAudioPlayerGui::updateTimes(const bool force)
 		}
 		if ((updatePlayed || updateTotal) && m_curr_audiofile.FileType != CFile::STREAM_AUDIO && m_time_total != 0)
 		{
-			CVFD::getInstance()->showAudioProgress(100 * m_time_played / m_time_total);
+			CVFD::getInstance()->showAudioProgress(uint8_t(100 * m_time_played / m_time_total));
 		}
 	}
 }
@@ -2210,7 +2208,7 @@ void CAudioPlayerGui::paintLCD()
 		CVFD::getInstance()->showAudioTrack(m_curr_audiofile.MetaData.artist, m_curr_audiofile.MetaData.title,
 						    m_curr_audiofile.MetaData.album);
 		if (m_curr_audiofile.FileType != CFile::STREAM_AUDIO && m_time_total != 0)
-			CVFD::getInstance()->showAudioProgress(100 * m_time_played / m_time_total);
+			CVFD::getInstance()->showAudioProgress(uint8_t(100 * m_time_played / m_time_total));
 		break;
 	case CAudioPlayerGui::PAUSE:
 		CVFD::getInstance()->showAudioPlayMode(CVFD::AUDIO_MODE_PAUSE);
@@ -2354,7 +2352,7 @@ void CAudioPlayerGui::getFileInfoToDisplay(std::string &fileInfo, CAudiofileExt 
 	{
 		fileInfo += "Unknown";
 	}
-	file.firstChar = tolower(fileInfo[0]);
+	file.firstChar = (char)tolower(fileInfo[0]);
 	//info += fileInfo;
 }
 
@@ -2527,7 +2525,7 @@ void CAudioPlayerGui::buildSearchTree()
 			it!=m_playlist.end(); ++it)
 	{
 		listPos++;
-		progress.showGlobalStatus(100*listPos / maxProgress);
+		progress.showStatus(100*listPos / maxProgress);
 		progress.showStatusMessageUTF(it->Filename);
 		unsigned char firstChar = getFirstChar(*it);
 		const std::pair<CTitle2Pos::iterator,bool> item =

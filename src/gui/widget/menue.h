@@ -46,6 +46,7 @@
 #include <gui/components/cc.h>
 #include <string>
 #include <vector>
+#include <neutrino_menue.h>
 extern "C" {
 #include <lua.h>
 #include <lauxlib.h>
@@ -569,7 +570,7 @@ class CMenuWidget : public CMenuTarget
 		virtual int exec(CMenuTarget* parent, const std::string & actionKey);
 		virtual const char *getName();
 		virtual void integratePlugins(CPlugins::i_type_t integration, const unsigned int shortcut=CRCInput::RC_nokey);
-		void setSelected(const int &Preselected){ preselected = Preselected; };
+		void setSelected(const int &Preselected){ selected = Preselected; };
 		int getSelected()const { return selected; };
 		void move(int xoff, int yoff);
 		int getSelectedLine(void)const {return exit_pressed ? -1 : selected;};

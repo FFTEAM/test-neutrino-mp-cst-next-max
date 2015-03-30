@@ -168,6 +168,10 @@ void CComponentsItem::kill(const fb_pixel_t& bg_color, bool ignore_parent)
 void CComponentsItem::syncSysColors()
 {
 	col_body 	= COL_MENUCONTENT_PLUS_0;
+	if (cc_body_gradientBuf){
+		free(cc_body_gradientBuf);
+		cc_body_gradientBuf = NULL;
+	}
 	col_shadow 	= COL_MENUCONTENTDARK_PLUS_0;
 	col_frame 	= COL_MENUCONTENT_PLUS_6;
 }
@@ -194,16 +198,30 @@ bool CComponentsItem::isAdded()
 	return false;
 }
 
+inline void CComponentsItem::setXPos(const int& xpos)
+{
+	x = xpos;
+	if (cc_parent)
+		setRealXPos(cc_parent->getRealXPos() + x);
+}
+
+inline void CComponentsItem::setYPos(const int& ypos)
+{
+	y = ypos;
+	if (cc_parent)
+		setRealYPos(cc_parent->getRealYPos() + y);
+}
+
 void CComponentsItem::setXPosP(const uint8_t& xpos_percent)
 {
 	int x_tmp  = cc_parent ? xpos_percent*cc_parent->getWidth() : xpos_percent*frameBuffer->getScreenWidth();
-	x = x_tmp/100;
+	setXPos(x_tmp/100);
 }
 
 void CComponentsItem::setYPosP(const uint8_t& ypos_percent)
 {
 	int y_tmp  = cc_parent ? ypos_percent*cc_parent->getHeight() : ypos_percent*frameBuffer->getScreenHeight();
-	x = y_tmp/100;
+	setYPos(y_tmp/100);
 }
 
 void CComponentsItem::setPosP(const uint8_t& xpos_percent, const uint8_t& ypos_percent)

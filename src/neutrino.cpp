@@ -254,7 +254,8 @@ CNeutrinoApp::CNeutrinoApp()
 	favorites_changed	= false;
 	bouquets_changed	= false;
 	channels_init		= false;
-	channellist_visible	= false;
+	channelList_allowed	= true;
+	channelList_painted	= false;
 }
 
 /*-------------------------------------------------------------------------------------
@@ -2162,9 +2163,7 @@ TIMER_START();
 
 	/* later on, we'll crash anyway, so tell about it. */
 	if (! zapit_init)
-		ShowMsg(LOCALE_MESSAGEBOX_INFO,
-				"Zapit initialization failed.\nThis is a fatal error, sorry.",
-				CMessageBox::mbrBack, CMessageBox::mbBack);
+		DisplayErrorMessage("Zapit initialization failed. This is a fatal error, sorry.");
 
 	InitZapitClient();
 	g_Zapit->setStandby(false);
@@ -2812,10 +2811,18 @@ void CNeutrinoApp::RealRun(CMenuWidget &mainMenu)
 
 int CNeutrinoApp::showChannelList(const neutrino_msg_t _msg, bool from_menu)
 {
+	/* Exit here if paint of channlellist is not allowed, disallow could be possible, eg: if
+	 * RC_ok or other stuff is shared with other window handlers and
+	 * it's easy here to disable channellist paint if required!
+	*/
+	if (!channelList_allowed){
+		channelList_allowed = true;
+		return menu_return::RETURN_NONE;
+	}
+	channelList_painted = false;
+
 	neutrino_msg_t msg = _msg;
 	InfoClock->enableInfoClock(false);
-	channellist_visible = true;
-
 	StopSubtitles();
 
 //_show:
@@ -2898,7 +2905,8 @@ _repeat:
 		delete hintBox;
 	}
 
-	channellist_visible = false;
+	channelList_painted = true;
+
 	if (!from_menu)
 		InfoClock->enableInfoClock(true);
 
@@ -4350,6 +4358,9 @@ int CNeutrinoApp::exec(CMenuTarget* parent, const std::string & actionKey)
 		return menu_return::RETURN_EXIT_ALL;
 	}
 	else if(actionKey=="restart") {
+		//usage of slots from any classes
+		OnBeforeRestart();
+
 		if (recordingstatus)
 			DisplayErrorMessage(g_Locale->getText(LOCALE_SERVICEMENU_RESTART_REFUSED_RECORDING));
 		else {

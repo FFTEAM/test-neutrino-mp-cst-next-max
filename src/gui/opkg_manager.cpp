@@ -199,6 +199,7 @@ static std::string bad_pattern[] = {
 	"-gconv-",
 	"-localedata-",
 	"^locale-base-",
+	"^perl-module-",
 	""
 };
 
