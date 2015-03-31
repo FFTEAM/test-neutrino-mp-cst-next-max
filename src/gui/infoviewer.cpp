@@ -249,9 +249,21 @@ void CInfoViewer::changePB()
 
 void CInfoViewer::initClock()
 {
+	static int gradient = g_settings.gradiant;
+
+	if (gradient != g_settings.gradiant && clock != NULL) {
+		gradient = g_settings.gradiant;
+		clock->clearSavedScreen();
+		delete clock;
+		clock = NULL;
+	}
+
 	if (clock == NULL){
 		clock = new CComponentsFrmClock();
-		clock->doPaintBg(true);
+		clock->doPaintBg(!gradient);
+		clock->enableTboxSaveScreen(gradient);
+		if (time_width)
+			clock->setWidth(time_width);
 	}
 
 	clock->setColorBody(COL_INFOBAR_PLUS_0);
@@ -393,6 +405,9 @@ void CInfoViewer::paintBackground(int col_NumBox)
 			      COL_INFOBAR_PLUS_0, c_rad_large,
 			      CORNER_TOP_RIGHT | (showButtonBar ? 0 : CORNER_BOTTOM));
 
+	if (g_settings.gradiant)
+		paintHead();
+
 	// number box
 	frameBuffer->paintBoxRel(BoxStartX + SHADOW_OFFSET, BoxStartY + SHADOW_OFFSET,
 				 ChanWidth, ChanHeight,
@@ -400,6 +415,18 @@ void CInfoViewer::paintBackground(int col_NumBox)
 	frameBuffer->paintBoxRel(BoxStartX, BoxStartY,
 				 ChanWidth, ChanHeight,
 				 col_NumBox, c_rad_mid);
+}
+
+void CInfoViewer::paintHead()
+{
+	CComponentsHeader header(ChanInfoX, ChanNameY, BoxEndX-ChanInfoX, time_height, "");
+
+	header.setCaption("");
+
+	clock->setTextColor(header.getTextObject()->getTextColor());
+	clock->setColorBody(header.getColorBody());
+
+	header.paint(CC_SAVE_SCREEN_NO);
 }
 
 void CInfoViewer::show_current_next(bool new_chan, int  epgpos)
@@ -764,7 +791,7 @@ void CInfoViewer::showTitle (const int ChanNum, const std::string & Channel, con
 		if (ChannelLogoMode != 2) {
 			//FIXME good color to display inactive for zap ?
 			//fb_pixel_t color = CNeutrinoApp::getInstance ()->channelList->SameTP(new_channel_id) ? COL_INFOBAR_TEXT : COL_INFOBAR_SHADOW_TEXT;
-			fb_pixel_t color = COL_INFOBAR_TEXT;
+			fb_pixel_t color = g_settings.gradiant ? COL_MENUHEAD_TEXT : COL_INFOBAR_TEXT;
 			g_Font[SNeutrinoSettings::FONT_TYPE_INFOBAR_CHANNAME]->RenderString(
 				ChanNameX + 10 + ChanNumWidth, ChanNameY + time_height,
 				BoxEndX - (ChanNameX + 20) - time_width - LEFT_OFFSET - 10 - ChanNumWidth,
