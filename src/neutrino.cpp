@@ -2819,7 +2819,7 @@ int CNeutrinoApp::showChannelList(const neutrino_msg_t _msg, bool from_menu)
 		channelList_allowed = true;
 		return menu_return::RETURN_NONE;
 	}
-	channelList_painted = false;
+	channelList_painted = true;
 
 	neutrino_msg_t msg = _msg;
 	InfoClock->enableInfoClock(false);
@@ -2905,7 +2905,7 @@ _repeat:
 		delete hintBox;
 	}
 
-	channelList_painted = true;
+	channelList_painted = false;
 
 	if (!from_menu)
 		InfoClock->enableInfoClock(true);
